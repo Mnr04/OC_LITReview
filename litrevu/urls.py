@@ -9,4 +9,6 @@ urlpatterns = [
     path('login/', LoginView.as_view(template_name='reviews/login.html'), name='login'),
     path('signup/', views.signup, name='signup'),
     path('logout/', views.log_out, name='logout'),
+
+    path('createTicket', views.createTicket, name="createTicket")
 ]
