@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Abonnements</title>
+</head>
+<body>
+
+    <h1>Suivre d'autres utilisateurs</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        <p>
+            <label>Nom d'utilisateur :</label>
+            {{ form.username }}
+        </p>
+        <button type="submit">Envoyer</button>
+    </form>
+
+    {% if message %}
+        <p>{{ message }}</p>
+    {% endif %}
+
+    <hr>
+
+    <h2>Abonnements</h2>
+    <ul>
+        {% for follow in following %}
+            <li>{{ follow.followed_user.username }}</li>
+        {% empty %}
+            <li>Vous ne suivez personne pour l'instant.</li>
+        {% endfor %}
+    </ul>
+
+    <hr>
+
+    <h2>Abonnés</h2>
+    <ul>
+        {% for follow in followers %}
+            <li>{{ follow.user.username }}</li>
+        {% empty %}
+            <li>Aucun abonné pour l'instant.</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>

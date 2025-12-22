@@ -3,7 +3,7 @@ from django.contrib.auth import login, get_user_model
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import logout
 from django import forms
-from .models import Ticket, Review
+from .models import Ticket, Review, UserFollows, User
 
 class SignupForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
@@ -27,6 +27,9 @@ class ReviewForm(forms.ModelForm):
             'body': 'Commentaire',
         }
 
+class FollowUserForm(forms.Form):
+    username = forms.CharField(label="Nom d'utilisateur", max_length=150)
+
 """ Authentification """
 def signup(request):
     if request.method == 'POST':
@@ -42,6 +45,8 @@ def signup(request):
     return render(request, 'reviews/signup.html', {'form': form})
 
 def main(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
     return render(request, 'reviews/main.html')
 
 def log_out(request):
@@ -50,6 +55,10 @@ def log_out(request):
 
 """ Ticket """
 def create_ticket(request):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     if request.method == 'POST':
         form = TicketForm(request.POST, request.FILES)
         if form.is_valid():
@@ -63,6 +72,10 @@ def create_ticket(request):
     return render(request, 'reviews/create_ticket.html', {'form': form})
 
 def edit_ticket(request, ticket_id):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     ticket = get_object_or_404(Ticket, id=ticket_id)
 
     if ticket.user != request.user:
@@ -82,6 +95,10 @@ def edit_ticket(request, ticket_id):
         )
 
 def delete_ticket(request, ticket_id):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     ticket = get_object_or_404(Ticket, id=ticket_id)
 
     if ticket.user == request.user:
@@ -93,6 +110,10 @@ def delete_ticket(request, ticket_id):
 
 """ Review """
 def create_review(request, ticket_id):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     ticket = get_object_or_404(Ticket, id=ticket_id)
 
     if request.method == 'POST':
@@ -109,6 +130,10 @@ def create_review(request, ticket_id):
     return render(request, 'reviews/create_review.html', {'form': form, 'ticket': ticket})
 
 def create_ticket_and_review(request):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     if request.method == 'POST':
         ticket_form = TicketForm(request.POST, request.FILES)
         review_form = ReviewForm(request.POST)
@@ -136,6 +161,11 @@ def create_ticket_and_review(request):
     return render(request, 'reviews/create_ticket_and_review.html', context)
 
 def edit_review(request, review_id):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+
     review = get_object_or_404(Review, id=review_id)
 
     if review.user != request.user:
@@ -156,6 +186,10 @@ def edit_review(request, review_id):
         )
 
 def delete_review(request, review_id):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
     review = get_object_or_404(Review, id=review_id)
 
     if review.user == request.user:
@@ -163,3 +197,42 @@ def delete_review(request, review_id):
         return redirect('main')
 
     return redirect('main')
+
+""" User Folow """
+
+def follow_users(request):
+
+    if not request.user.is_authenticated:
+        return redirect('login')
+
+    form = FollowUserForm()
+    message = ""
+
+    if request.method == 'POST':
+        form = FollowUserForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            try:
+                user_to_follow = User.objects.get(username=username)
+
+                if user_to_follow == request.user:
+                    message = "Vous ne pouvez pas vous suivre vous-même."
+                elif UserFollows.objects.filter(user=request.user, followed_user=user_to_follow).exists():
+                    message = "Vous suivez déjà cet utilisateur."
+                else:
+                    UserFollows.objects.create(user=request.user, followed_user=user_to_follow)
+                    return redirect('follow_users')
+
+            except User.DoesNotExist:
+                message = "Cet utilisateur n'existe pas."
+
+    following = UserFollows.objects.filter(user=request.user)
+    followers = UserFollows.objects.filter(followed_user=request.user)
+
+    return render(request, 'reviews/follow_users.html', {
+        'form': form,
+        'following': following,
+        'followers': followers,
+        'message': message
+    })
+

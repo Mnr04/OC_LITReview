@@ -18,4 +18,7 @@ urlpatterns = [
     path('review/<int:ticket_id>/create_review/', views.create_review, name='create_review'),
     path('review/<int:review_id>/edit/', views.edit_review, name='edit_review'),
     path('review/<int:review_id>/delete/', views.delete_review, name='delete_review'),
+
+    path('follow-users/', views.follow_users, name='follow_users'),
+    path('unfollow/<int:user_id>/', views.unfollow_user, name='unfollow_user'),
 ]
