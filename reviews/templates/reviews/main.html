@@ -1,13 +1,93 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <title>Mon Flux</title>
+    <meta charset="UTF-8">
+    <title>Flux - LITReview</title>
 </head>
 <body>
-    <h1>Bienvenue</h1>
-    <p>Bravo, tu es connecté.</p>
 
-    <p>Utilisateur connecté : {{ user.username }}</p>
-    <footer><a href="{% url 'logout' %}">Se déconnecter</a></footer>
+    <div>
+        <h1>LITReview</h1>
+        <p>Connecté en tant que : {{ user.username }}</p>
+    </div>
+
+    <hr>
+
+    <div>
+        <a href="{% url 'create_ticket' %}">
+            <button>Demander une critique</button>
+        </a>
+        <a href="{% url 'create_ticket_and_review' %}">
+            <button>Créer une critique</button>
+        </a>
+    </div>
+
+    <hr>
+
+    <div>
+
+        {% for post in posts %}
+
+            {% if post.content_type == 'REVIEW' %}
+                <div>
+                    <p>
+                        {% if post.user == user %}
+                            Vous avez publié une critique
+                        {% else %}
+                            {{ post.user.username }} a publié une critique
+                        {% endif %}
+                         - {{ post.time_created }}
+                    </p>
+
+                    <h3>{{ post.headline }} - Note : {{ post.rating }}/5</h3>
+                    <p>{{ post.body }}</p>
+
+                    <div>
+                        <p>Ticket concerné : {{ post.ticket.title }}</p>
+
+                        {% if post.ticket.image %}
+                            <img src="{{ post.ticket.image.url }}" alt="Image du livre" width="150">
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr>
+
+            {% elif post.content_type == 'TICKET' %}
+                <div>
+                    <p>
+                        {% if post.user == user %}
+                            Vous avez demandé une critique
+                        {% else %}
+                            {{ post.user.username }} a demandé une critique
+                        {% endif %}
+                         - {{ post.time_created }}
+                    </p>
+
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.description }}</p>
+
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="Image du livre" width="150">
+                    {% endif %}
+
+                    {% if post.user != user %}
+                        <br>
+                        <a href="{% url 'create_review' post.id %}">
+                            <button>Créer une critique</button>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <hr>
+
+            {% endif %}
+
+        {% empty %}
+            <p>Aucun billet ni critique à afficher pour le moment.</p>
+        {% endfor %}
+
+    </div>
+
 </body>
 </html>
